@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مربی افسانه‌ای فوتبال</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#10251b;color:white;font-family:Tahoma;text-align:center}
+header{background:#07140e;padding:20px;font-size:23px;font-weight:bold}
+main{max-width:600px;margin:auto;padding:12px}
+.card{background:#1c3829;border-radius:15px;padding:16px;margin:13px 0}
+h3{color:#ffd45b}
+select,button{font:inherit;padding:12px;border:0;border-radius:9px;margin:5px;max-width:100%}
+select{background:#eee;color:#222}
+button{background:#f5c542;color:#172016;font-weight:bold}
+.pitch{background:repeating-linear-gradient(0deg,#21834a,#21834a 55px,#247d46 55px,#247d46 110px);border:3px solid white;border-radius:12px;padding:18px}
+.score{font-size:44px;font-weight:bold}
+.players{display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px}
+.player{background:#ffffff25;padding:10px;border-radius:8px}
+.log{height:130px;overflow:auto;text-align:right;background:#0b1b12;padding:10px;border-radius:8px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px;border-bottom:1px solid #567}
+</style>
+</head>
+<body>
+<header>🏆 مربی افسانه‌ای فوتبال</header>
+<main>
+<div class="card">
+<h3>⚽ انتخاب باشگاه</h3>
+<select id="team">
+<option value="90">رئال مادرید</option>
+<option value="89">بارسلونا</option>
+<option value="88">منچسترسیتی</option>
+<option value="86">لیورپول</option>
+<option value="87">بایرن مونیخ</option>
+<option value="82">پاری سن ژرمن</option>
+<option value="76">تیم ملی ایران</option>
+</select>
+<button onclick="newSeason()">شروع فصل جدید</button>
+</div>
+
+<div class="card">
+<h3>🏟️ مسابقه</h3>
+<p id="opponent">ابتدا فصل را شروع کن</p>
+<div class="pitch">
+<div class="score"><span id="g1">0</span> - <span id="g2">0</span></div>
+<p id="clock">دقیقه ۰</p>
+<div class="players">
+<div class="player">🧤 دروازه</div>
+<div class="player">🛡️ دفاع</div>
+<div class="player">⚙️ هافبک</div>
+<div class="player">⚽ حمله</div>
+</div>
+</div>
+<button id="start" onclick="startMatch()" disabled>شروع بازی</button>
+<button onclick="pauseMatch()">توقف</button>
+</div>
+
+<div class="card">
+<h3>🎯 تاکتیک سرمربی</h3>
+<button onclick="setTactic('دفاعی',-.12)">دفاعی</button>
+<button onclick="setTactic('متعادل',0)">متعادل</button>
+<button onclick="setTactic('هجومی',.12)">هجومی</button>
+<p id="tactic">تاکتیک: متعادل</p>
+</div>
+
+<div class="card">
+<h3>🔄 تعویض بازیکن</h3>
+<select id="out">
+<option>مهاجم اول</option>
+<option>هافبک اول</option>
+<option>مدافع اول</option>
+</select>
+<select id="inn">
+<option>مهاجم ذخیره</option>
+<option>هافبک ذخیره</option>
+<option>مدافع ذخیره</option>
+</select>
+<button onclick="substitute()">انجام تعویض</button>
+<p id="submsg">هنوز تعویضی انجام نشده</p>
+</div>
+
+<div class="card">
+<h3>🎙️ گزارشگر فارسی</h3>
+<div class="log" id="log">به باشگاه خود خوش آمدی سرمربی!</div>
+</div>
+
+<div class="card">
+<h3>🏆 جدول لیگ</h3>
+<table>
+<thead><tr><th>تیم</th><th>بازی</th><th>امتیاز</th></tr></thead>
+<tbody id="table"><tr><td colspan="3">هنوز مسابقه‌ای انجام نشده</td></tr></tbody>
+</table>
+</div>
+<div class="card">
+<h3>💾 ذخیره بازی</h3>
+<button onclick="saveGame()">ذخیره پیشرفت</button>
+<button onclick="loadGame()">بازیابی پیشرفت</button>
+<p id="saved">ذخیره آفلاین روی گوشی</p>
+</div>
+</main>
+<script>
+let power=85,enemy=80,minute=0,a=0,b=0;
+let timer=null,bonus=0,points=0,played=0,teamName="";
+function say(t){
+let l=document.getElementById('log');
+l.innerHTML+='<p>'+t+'</p>';l.scrollTop=l.scrollHeight;
+}
+function newSeason(){
+pauseMatch();
+teamName=document.getElementById('team').selectedOptions[0].text;
+power=+document.getElementById('team').value;
+enemy=72+Math.floor(Math.random()*17);
+minute=0;a=0;b=0;bonus=0;
+document.getElementById('opponent').innerText='حریف: تیم رقیب | قدرت '+enemy;
+document.getElementById('log').innerHTML='';
+say('فصل جدید آغاز شد! سرمربی '+teamName+' هستی.');
+document.getElementById('start').disabled=false;
+update();
+}
+function update(){
+document.getElementById('g1').innerText=a;
+document.getElementById('g2').innerText=b;
+document.getElementById('clock').innerText='دقیقه '+minute;
+}
+function startMatch(){
+if(timer||minute>=90)return;
+document.getElementById('start').disabled=true;
+say('سوت آغاز مسابقه! بازی شروع شد.');
+timer=setInterval(()=>{
+minute++;
+let chance=Math.random();
+let strength=(power-enemy)/100+bonus;
+if(chance<.045+strength*.09){
+a++;say('⚽ گللللل! تیم شما گل زد!');
+}else if(chance>.95-strength*.04){
+b++;say('😟 حریف گل زد!');
+}else if(chance<.3){
+say('تیم شما در حال حمله است...');
+}else if(chance>.75){
+say('دروازه‌بان توپ را مهار کرد!');
+}
+update();
+if(minute>=90)finish();
+},700);
+}
+function pauseMatch(){
+if(timer){clearInterval(timer);timer=null;}
+if(minute>0&&minute<90){
+document.getElementById('start').disabled=false;
+say('مسابقه متوقف شد.');
+}
+}
+function setTactic(name,value){
+bonus=value;
+document.getElementById('tactic').innerText='تاکتیک: '+name;
+say('دستور سرمربی: '+name);
+}
+function substitute(){
+if(minute===0||minute>=90){
+document.getElementById('submsg').innerText='ابتدا مسابقه را شروع کن.';
+return;
+}
+let x=document.getElementById('out').value;
+let y=document.getElementById('inn').value;
+document.getElementById('submsg').innerText=x+' با '+y+' تعویض شد.';
+power=Math.min(99,power+1);
+say('🔄 تعویض انجام شد. بازیکن تازه‌نفس وارد زمین شد.');
+}
+function finish(){
+pauseMatch();
+played++;
+let p=a>b?3:a===b?1:0;
+points+=p;
+say('⏱️ پایان مسابقه! '+(p===3?'تبریک! پیروز شدید 🏆':p===1?'بازی مساوی شد.':'این مسابقه را باختید.'));
+document.getElementById('start').disabled=true;
+document.getElementById('table').innerHTML=
+'<tr><td>'+teamName+'</td><td>'+played+'</td><td>'+points+'</td></tr>';
+saveGame();
+}
+function saveGame(){
+localStorage.setItem('footballManager',JSON.stringify({
+teamName,points,played
+}));
+document.getElementById('saved').innerText='پیشرفت ذخیره شد ✅';
+}
+function loadGame(){
+let s=localStorage.getItem('footballManager');
+if(!s){document.getElementById('saved').innerText='هنوز ذخیره‌ای وجود ندارد';return;}
+let d=JSON.parse(s);
+teamName=d.teamName;points=d.points;played=d.played;
+document.getElementById('saved').innerText='بازیابی شد: '+teamName;
+document.getElementById('table').innerHTML=
+'<tr><td>'+teamName+'</td><td>'+played+'</td><td>'+points+'</td></tr>';
+}
+</script>
+</body>
+</html>
